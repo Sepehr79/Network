@@ -7,34 +7,7 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) throws IOException {
         ClientImp client = new ClientImp("localhost", 7777);
-
-        try {
-            Thread t = new Thread(()->{
-                //reading thread
-                new Thread(()->{
-                   while (true){
-                       String text = client.getMessage();
-
-                       System.out.println(text);
-                   }
-                }).start();
-
-                //writing thread
-                new Thread(()->{
-                    Scanner scanner = new Scanner(System.in);
-                   while(true){
-                       String input = scanner.nextLine();
-
-                       client.sentMessage(input);
-                   }
-                }).start();
-            });
-        t.start();
-        t.join();
-        } catch (InterruptedException e) {
-            System.err.println("cant join");
-        }
-
+        client.startMessaging();
     }
 }
 class ClientImp{
@@ -70,11 +43,40 @@ class ClientImp{
             try {
                 text = dataInputStream.readUTF();
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
         }
 
         return text;
+    }
+
+    public void startMessaging(){
+        try {
+            Thread t = new Thread(()->{
+                //reading thread
+                new Thread(()->{
+                    while (true){
+                        String text = this.getMessage();
+
+                        System.out.println(text);
+                    }
+                }).start();
+
+                //writing thread
+                new Thread(()->{
+                    Scanner scanner = new Scanner(System.in);
+                    while(true){
+                        String input = scanner.nextLine();
+
+                        this.sentMessage(input);
+                    }
+                }).start();
+            });
+            t.start();
+            t.join();
+        } catch (InterruptedException e) {
+            System.err.println("cant join");
+        }
     }
 
 }

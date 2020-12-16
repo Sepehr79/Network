@@ -8,39 +8,8 @@ import java.util.Scanner;
 public class Server {
     public static void main(String[] args) {
         ServerImp server = new ServerImp();
-
         server.serverOn(7777);
-
-        try {
-            Thread t = new Thread(()-> {
-                //reading thread
-                new Thread(() -> {
-                    while (true) {
-                        try {
-                            String text = server.getMessage();
-                            System.out.println(text);
-                        } catch (Exception e) {
-
-                        }
-                    }
-                }).start();
-
-                //writing thread
-                new Thread(() -> {
-                    Scanner scanner = new Scanner(System.in);
-                    while (true) {
-                        String text = scanner.nextLine();
-
-                        server.sendMessage(text);
-                    }
-                }).start();
-            });
-            t.start();
-            t.join();
-        } catch (InterruptedException e) {
-            System.err.println("cant join");
-        }
-
+        server.startMessaging();
     }
 
 }
@@ -84,5 +53,37 @@ class ServerImp{
         if(clientSocket != null)
             return true;
         return false;
+    }
+
+    public void startMessaging(){
+        try {
+            Thread t = new Thread(()-> {
+                //reading thread
+                new Thread(() -> {
+                    while (true) {
+                        try {
+                            String text = this.getMessage();
+                            System.out.println(text);
+                        } catch (Exception e) {
+
+                        }
+                    }
+                }).start();
+
+                //writing thread
+                new Thread(() -> {
+                    Scanner scanner = new Scanner(System.in);
+                    while (true) {
+                        String text = scanner.nextLine();
+
+                        this.sendMessage(text);
+                    }
+                }).start();
+            });
+            t.start();
+            t.join();
+        } catch (InterruptedException e) {
+            System.err.println("cant join");
+        }
     }
 }
