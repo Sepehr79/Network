@@ -23,6 +23,7 @@ class ClientImp{
             dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             dataOutputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             System.out.println("Successfully connected");
+            System.out.println("print exit to close...");
         } catch (Exception e) {
             System.err.println("Client cannot connect to server!");
         }
@@ -50,33 +51,38 @@ class ClientImp{
         return text;
     }
 
-    public void startMessaging(){
+    public void close(){
         try {
-            Thread t = new Thread(()->{
-                //reading thread
-                new Thread(()->{
-                    while (true){
-                        String text = this.getMessage();
-
-                        System.out.println(text);
-                    }
-                }).start();
-
-                //writing thread
-                new Thread(()->{
-                    Scanner scanner = new Scanner(System.in);
-                    while(true){
-                        String input = scanner.nextLine();
-
-                        this.sentMessage(input);
-                    }
-                }).start();
-            });
-            t.start();
-            t.join();
-        } catch (InterruptedException e) {
-            System.err.println("cant join");
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    public void startMessaging(){
+        //reading thread
+        Thread readingThread = new Thread(()->{
+            while (true){
+                String text = this.getMessage();
+
+                System.out.println(text);
+            }
+        });
+
+        //writing thread
+        Thread writingThread = new Thread(()->{
+           Scanner scanner = new Scanner(System.in);
+           String input = "";
+           while(!input.equals("exit")){
+               input = scanner.nextLine();
+               this.sentMessage(input);
+           }
+           System.out.println("Disconnected from server");
+           readingThread.stop();
+           Thread.currentThread().interrupt();
+        });
+        readingThread.start();
+        writingThread.start();
     }
 
 }

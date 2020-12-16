@@ -49,41 +49,39 @@ class ServerImp{
     public String getMessage() throws IOException {
         return dataInputStream.readUTF();
     }
-    public boolean isClientConnected(){
-        if(clientSocket != null)
-            return true;
-        return false;
-    }
 
     public void startMessaging(){
-        try {
-            Thread t = new Thread(()-> {
-                //reading thread
-                new Thread(() -> {
-                    while (true) {
-                        try {
-                            String text = this.getMessage();
-                            System.out.println(text);
-                        } catch (Exception e) {
 
-                        }
+        //writing thread
+        Thread writingThread = new Thread(() -> {
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                String text = scanner.nextLine();
+                this.sendMessage(text);
+            }
+        });
+
+        //reading thread
+        Thread readingThread = new Thread(() -> {
+            boolean contin = true;
+            while (contin) {
+                try {
+                    String text = this.getMessage();
+                    if (text.equals("exit")){
+                        clientSocket.close();
+                        contin = false;
                     }
-                }).start();
-
-                //writing thread
-                new Thread(() -> {
-                    Scanner scanner = new Scanner(System.in);
-                    while (true) {
-                        String text = scanner.nextLine();
-
-                        this.sendMessage(text);
-                    }
-                }).start();
-            });
-            t.start();
-            t.join();
-        } catch (InterruptedException e) {
-            System.err.println("cant join");
-        }
+                    else
+                        System.out.println(text);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("Client disconnected.");
+            writingThread.interrupt();
+            Thread.currentThread().interrupt();
+        });
+        readingThread.start();
+        writingThread.start();
     }
 }
